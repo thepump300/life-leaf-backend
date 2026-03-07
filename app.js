@@ -5,6 +5,8 @@ const authRoutes     = require("./routes/authRoutes");
 const profileRoutes  = require("./routes/profileRoutes");
 const qrRoutes       = require("./routes/qrRoutes");
 const incidentRoutes = require("./routes/incidentRoutes");
+const { protect }    = require("./middleware/authMiddleware");
+const { getDashboardStats } = require("./controllers/qrController");
 
 const app = express();
 
@@ -20,6 +22,8 @@ app.use("/api/auth",      authRoutes);
 app.use("/api/profile",   profileRoutes);
 app.use("/api/qr",        qrRoutes);
 app.use("/api/incidents", incidentRoutes);
+
+app.get("/api/dashboard/stats", protect, getDashboardStats);
 
 // ── Health check ──────────────────────────────────────────────────────
 app.get("/api/health", (req, res) =>

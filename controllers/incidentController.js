@@ -29,6 +29,9 @@ const reportIncident = async (req, res) => {
       timestamp: timestamp ? new Date(timestamp) : new Date(),
     });
 
+    // Increment scan count on the owner's record
+    User.findByIdAndUpdate(user._id, { $inc: { scanCount: 1 } }).catch(() => {});
+
     // Fire-and-forget notification (doesn't block response)
     sendIncidentAlert(user, incident).catch((err) =>
       console.error("[Notification Error]", err.message)
@@ -58,4 +61,24 @@ const getMyIncidents = async (req, res) => {
   }
 };
 
-module.exports = { reportIncident, getMyIncidents };
+// PUT /api/incidents/:id/resolve  — protected
+const resolveIncident = async (req, res) => {
+  try {
+    const incident = await Incident.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!incident) {
+      return res.status(404).json({ success: false, message: "Incident not found" });
+    }
+    if (incident.status === "resolved") {
+      return res.status(400).json({ success: false, message: "Already resolved" });
+    }
+
+    incident.status = "resolved";
+    await incident.save();
+
+    res.json({ success: true, message: "Marked as resolved", incident });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = { reportIncident, getMyIncidents, resolveIncident };
