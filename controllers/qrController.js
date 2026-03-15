@@ -12,18 +12,18 @@ const getByQrId = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid QR code" });
     }
 
-    const user = await User.findOne({ qrId }).select("vehicleNumber");
+    const user = await User.findOne({ qrId }).select("vehicleNumber bloodGroup");
 
     if (!user) {
       return res.status(404).json({ success: false, message: "QR code not found" });
     }
 
-    // Log the scan — increment counter
-    User.findByIdAndUpdate(user._id, { $inc: { scanCount: 1 } }).catch(() => {});
-
     res.json({
       success: true,
-      data: { vehicleNumber: user.vehicleNumber },
+      data: {
+        vehicleNumber: user.vehicleNumber,
+        bloodGroup:    user.bloodGroup || null,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });
@@ -42,7 +42,8 @@ const regenerateQR = async (req, res) => {
       return res.status(400).json({ success: false, message: "Complete your profile before regenerating QR" });
     }
 
-    user.qrId = randomUUID();
+    user.qrId          = randomUUID();
+    user.stickerOrdered = false; // old sticker is now invalid — must order a new one
     await user.save();
 
     res.json({ success: true, message: "QR regenerated successfully", qrId: user.qrId });

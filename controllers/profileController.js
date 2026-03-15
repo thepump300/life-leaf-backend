@@ -23,7 +23,7 @@ const setupProfile = async (req, res) => {
   }
 
   try {
-    const { name, vehicleNumber, emergencyContacts, bloodGroup } = req.body;
+    const { name, vehicleNumber, emergencyContacts, bloodGroup, phone } = req.body;
 
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -39,6 +39,7 @@ const setupProfile = async (req, res) => {
     user.vehicleNumber     = vehicleNumber ? vehicleNumber.toUpperCase().trim() : user.vehicleNumber;
     user.emergencyContacts = emergencyContacts || user.emergencyContacts;
     user.bloodGroup        = bloodGroup || user.bloodGroup;
+    if (phone !== undefined) user.phone = phone ? phone.trim() : "";
     user.profileCompleted  = true;
 
     await user.save();
@@ -60,13 +61,14 @@ const updateProfile = async (req, res) => {
   }
 
   try {
-    const { name, vehicleNumber, emergencyContacts, bloodGroup } = req.body;
+    const { name, vehicleNumber, emergencyContacts, bloodGroup, phone } = req.body;
 
     const update = {};
     if (name)              update.name              = name;
     if (vehicleNumber)     update.vehicleNumber     = vehicleNumber.toUpperCase().trim();
     if (emergencyContacts) update.emergencyContacts = emergencyContacts;
     if (bloodGroup)        update.bloodGroup        = bloodGroup;
+    if (phone !== undefined) update.phone           = phone ? phone.trim() : "";
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -84,4 +86,19 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, setupProfile, updateProfile };
+// POST /api/profile/order — demo order placement
+const placeOrder = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { stickerOrdered: true },
+      { new: true }
+    ).select("-password");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, message: "Order placed", user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = { getProfile, setupProfile, updateProfile, placeOrder };

@@ -1,7 +1,7 @@
 const { Router }                        = require("express");
 const { body }                          = require("express-validator");
 const { protect }                       = require("../middleware/authMiddleware");
-const { getProfile, setupProfile, updateProfile } = require("../controllers/profileController");
+const { getProfile, setupProfile, updateProfile, placeOrder } = require("../controllers/profileController");
 
 const router = Router();
 
@@ -14,7 +14,10 @@ router.post(
   protect,
   [
     body("name").optional().trim().notEmpty().withMessage("Name cannot be blank"),
-    body("vehicleNumber").trim().notEmpty().withMessage("Vehicle number is required"),
+    body("vehicleNumber")
+      .trim().notEmpty().withMessage("Vehicle number is required")
+      .matches(/^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/)
+      .withMessage("Invalid format. Use: MH12AB1234 (State·RTO·Series·Number)"),
     body("emergencyContacts")
       .optional()
       .isArray({ max: 2 })
@@ -39,7 +42,10 @@ router.put(
   protect,
   [
     body("name").optional().trim().notEmpty().withMessage("Name cannot be blank"),
-    body("vehicleNumber").optional().trim().notEmpty().withMessage("Vehicle number cannot be blank"),
+    body("vehicleNumber")
+      .optional().trim().notEmpty().withMessage("Vehicle number cannot be blank")
+      .matches(/^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/)
+      .withMessage("Invalid format. Use: MH12AB1234 (State·RTO·Series·Number)"),
     body("emergencyContacts")
       .optional()
       .isArray({ max: 2 })
@@ -47,5 +53,8 @@ router.put(
   ],
   updateProfile
 );
+
+// POST /api/profile/order  — demo: marks sticker as ordered
+router.post("/order", protect, placeOrder);
 
 module.exports = router;

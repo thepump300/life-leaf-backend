@@ -9,13 +9,18 @@ const incidentSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["parking", "accident"],
+      enum: ["parking", "accident", "lights_on", "damage"],
       required: [true, "Incident type is required"],
     },
     location: {
       type: String,
       trim: true,
       default: "Unknown",
+    },
+    note: {
+      type: String,
+      trim: true,
+      default: "",
     },
     timestamp: {
       type: Date,

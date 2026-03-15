@@ -5,6 +5,7 @@ const emergencyContactSchema = new mongoose.Schema(
   {
     name:  { type: String, trim: true },
     phone: { type: String, trim: true },
+    email: { type: String, trim: true, lowercase: true },
   },
   { _id: false }
 );
@@ -47,11 +48,19 @@ const userSchema = new mongoose.Schema(
       type: [emergencyContactSchema],
       default: [],
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
     bloodGroup: {
       type: String,
       trim: true,
     },
     profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    stickerOrdered: {
       type: Boolean,
       default: false,
     },
