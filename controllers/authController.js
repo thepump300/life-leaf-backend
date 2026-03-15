@@ -254,6 +254,57 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// ── Google OAuth ──────────────────────────────────────────────────────
+exports.googleAuth = async (req, res) => {
+  try {
+    const { access_token } = req.body;
+    if (!access_token) {
+      return res.status(400).json({ success: false, message: "Access token required" });
+    }
+
+    // Fetch user info from Google
+    const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    if (!response.ok) {
+      return res.status(401).json({ success: false, message: "Invalid Google token" });
+    }
+
+    const { email, name, sub: googleId } = await response.json();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Could not retrieve email from Google" });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Existing user — ensure verified
+      if (!user.isVerified) {
+        user.isVerified = true;
+        await user.save();
+      }
+    } else {
+      // New Google user — no password needed
+      const crypto = require("crypto");
+      user = await User.create({
+        name: name || email.split("@")[0],
+        email,
+        googleId,
+        isVerified: true,
+        password: crypto.randomBytes(32).toString("hex"), // unusable random password
+      });
+    }
+
+    sendToken(user, 200, res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // ── Get current user (protected) ──────────────────────────────────────
 exports.getMe = async (req, res) => {
   try {

@@ -3,7 +3,7 @@ const { body }   = require("express-validator");
 const rateLimit  = require("express-rate-limit");
 const {
   register, verifyEmail, resendOTP,
-  login, forgotPassword, resetPassword, getMe,
+  login, forgotPassword, resetPassword, getMe, googleAuth,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -38,6 +38,7 @@ router.post("/register",         registerRules, register);
 router.post("/verify-email",     verifyEmail);
 router.post("/resend-otp",       otpLimiter, resendOTP);
 router.post("/login",            loginLimiter, loginRules, login);
+router.post("/google",           googleAuth);
 router.post("/forgot-password",  otpLimiter, forgotPassword);
 router.post("/reset-password",   resetPassword);
 router.get("/me",                protect, getMe);
